@@ -1,0 +1,10 @@
+# Ignore secrets and env vars
+.streamlit/secrets.toml
+.env
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore .venv used for local development
+.venv/
