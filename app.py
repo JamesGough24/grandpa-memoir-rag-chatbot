@@ -4,6 +4,11 @@ from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.schema import HumanMessage, AIMessage
+import os
+from process import set_up_db
+
+if not os.path.exists('db'):
+    set_up_db()
 
 # Set Streamlit app title and config page
 st.set_page_config(page_title="AlanGPT", page_icon="📚", initial_sidebar_state='expanded', layout='wide')

@@ -15,7 +15,7 @@ def load_and_chunk(memoir_file):
     memoir_doc = Document(page_content=memoir_text, metadata={})
 
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=600,
+        chunk_size=400,
         chunk_overlap=100,
         length_function=len,
         is_separator_regex=False
@@ -37,8 +37,6 @@ def create_vectorstore(chunks):
 
     vectorstore.add_texts(texts=texts, metadatas=metadatas)
 
-    print("Added:", vectorstore._collection.count(), "documents")
-
-if __name__ == "__main__":
+def set_up_db():
     chunks = load_and_chunk(MEMOIR_FILE)
     create_vectorstore(chunks)
