@@ -7,12 +7,14 @@ from langchain.schema import HumanMessage, AIMessage
 import os
 from process import set_up_db
 
+# Find, load, and embed chunks from life story .txt file
 if not os.path.exists('db'):
     set_up_db()
 
 # Set Streamlit app title and config page
 st.set_page_config(page_title="AlanGPT", page_icon="📚", initial_sidebar_state='expanded', layout='wide')
 
+# Initialize chat history and memory
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
@@ -22,6 +24,7 @@ if "memory" not in st.session_state:
         return_messages=True
     )
 
+# Create UI sidebar
 with st.sidebar:
     st.header("About this Chatbot  📖")
     st.write("This chatbot can answer questions about Alan Gough's life using")
@@ -42,11 +45,13 @@ with st.sidebar:
         "What car did Alan once buy?",
         "Recount a funny experience from Alan's life"
     ]
+    # Create a button for each example prompt that (if clicked) is entered as user query
     for prompt in example_prompts:
         if st.button(prompt, key=f"example_{prompt}"):
             st.session_state.pending_prompt = prompt
             st.rerun()
 
+    # Add button for user to download original PDF version of life story
     st.subheader("Download Alan's Life Story  👇")
     with open("Grandad_Life_Story.pdf", "rb") as pdf_file:
         st.download_button(
@@ -84,17 +89,20 @@ def expand_query_with_context(query, memory, k=4):
     # Get recent conversation history for context
     chat_history = memory.chat_memory.messages if memory.chat_memory.messages else []
 
+    # Don't change query if no previous messages
     if not chat_history:
         return query
     
+    # If no vague indicators in the query, it most likely contains all necessary context
     vague_indicators = ['he', 'him', 'his', 'she', 'her', 'hers', 'they', 'them', 'their', 'it']
     has_vague_reference = any(indicator in query.lower() for indicator in vague_indicators)
 
     if not has_vague_reference:
         return query
 
+    # Add the last User-AI interactions as context
     recent_messages = []
-    for msg in chat_history[-4:]:
+    for msg in chat_history[-2:]:
         if isinstance(msg, HumanMessage):
             recent_messages.append(f"User: {msg.content}")
         elif isinstance(msg, AIMessage):
@@ -116,6 +124,7 @@ def perform_similarity_search(vectorstore, query, memory, k=6):
     relevant_chunks = [doc.page_content for doc in relevant_chunks_docs]
     print(f"These were the relevant chunks for the ORIGINAL prompt: {relevant_chunks}")
 
+    # If extra context was necessary, add relevant chunks needed for context
     if expanded_query != query:
         expanded_relevant_chunks_docs = vectorstore.similarity_search(query, k=4)
         expanded_relevant_chunks = [doc.page_content for doc in expanded_relevant_chunks_docs]
@@ -164,6 +173,7 @@ The user just asked: {query}. Your job is to answer them."""
 
 def query_llm_with_context(llm, prompt):
     try:
+        # Query GPT-4o mini
         response = llm.predict(prompt)
         return response
     except Exception as e:
@@ -185,6 +195,7 @@ def main():
         with st.chat_message(message['role']):
             st.write(message['content'])
 
+    # Accept prompt input from user
     user_input = st.chat_input("Ask a question about Alan Gough's life!")
     prompt = None
     
